@@ -1,27 +1,38 @@
-# Use the official Golang image to build the app
+# Build stage
 FROM golang:1.22 AS builder
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy go.mod and go.sum and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the entire project
 COPY . .
 
-# Build the Go app
-RUN go build -o api .
+# Ensure the binary is statically compiled
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api .
 
-# Use a minimal Alpine image to run the app
-FROM ubuntu:22.04
+# Verify the binary was created in the build stage
+RUN ls -l /app/api
+
+# Use a minimal runtime image
+FROM alpine:latest
+
 WORKDIR /app
-# Copy the binary from the builder stage
-COPY --from=builder /app/api .
-EXPOSE 8080
-# Expose port 8080 for HTTP traffic
+
+# Install necessary OS dependencies
+RUN apk update && apk add --no-cache ca-certificates
+
+# Copy the binary
+COPY --from=builder /app/api /app/api
+
+# Make the binary executable
 RUN chmod +x /app/api
 
-# Run the app
+# Verify the binary exists in the runtime stage
+RUN ls -l /app/api
+
+# Expose port 8080
+EXPOSE 8080
+
+# Run the application
 CMD ["./api"]
