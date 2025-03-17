@@ -11,7 +11,16 @@ import (
 func main() {
 	// Initialize Gin router
 	r := gin.Default()
-	r.Use(cors.Default())
+
+	// Apply custom CORS middleware
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},  // Allow requests from frontend
+		AllowMethods:     []string{"GET", "POST"},            // Allow only GET and POST requests
+		AllowHeaders:     []string{"Origin", "Content-Type"}, // Allow specific headers
+		ExposeHeaders:    []string{"Content-Length"},         // Expose specific headers
+		AllowCredentials: true,                               // Allow credentials (e.g., cookies)
+	}))
+
 	// Setup routes
 	r.GET("/tools", routes.GetTools)
 	r.GET("/tools/:name", routes.GetToolByName)
