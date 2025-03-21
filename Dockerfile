@@ -25,11 +25,17 @@ RUN apk update && apk add --no-cache ca-certificates
 # Copy the binary
 COPY --from=builder /app/api /app/api
 
+COPY .env .env
+
 # Make the binary executable
 RUN chmod +x /app/api
 
 # Verify the binary exists in the runtime stage
 RUN ls -l /app/api
+
+# Set environment variables
+ENV PORT=8080
+ENV CORS_ORIGINS=http://localhost:3000
 
 # Expose port 8080
 EXPOSE 8080
